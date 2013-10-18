@@ -38,10 +38,16 @@
 \section{Design}
 \hrule
 \subsection{Initial Implementation}
-Initial design...
+My overall idea for an inital design involves using the struct in the ar.h file, to store all information about the archive, and then 
+information on each archived file below it, following the specifications listed in ar.h.
+\subsubsection{Archiving}
+First write information about the files, to the file descriptor of the archive. Store this first. Next, follow the same steps on each
+file provided in the arguments, by saving the file descriptor information, then the content directly afterwards.
 
+\subsubsection{Extraction}
+Read the information about the archive file, then begin extraction on the first file stored inside, and so on.
 \subsection{Deviations}
-Devations from initial design...
+Deviations from initial design...
 \clearpage
 
 \section{Work Log}

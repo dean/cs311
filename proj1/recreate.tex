@@ -1,0 +1,147 @@
+\documentclass[fleqn,10pt,titlepage]{article}
+
+\usepackage{graphicx}                                        
+
+\usepackage{amssymb}                                         
+\usepackage{amsmath}                                         
+\usepackage{amsthm}                                          
+
+\usepackage{alltt}                                           
+\usepackage{float}
+\usepackage{color}
+
+\usepackage{url}
+
+\usepackage{balance}
+\usepackage[TABBOTCAP, tight]{subfigure}
+\usepackage{enumitem}
+
+\usepackage[top=0.8in, left=1in, bottom=0.8in, right=1in]{geometry}
+
+\usepackage{pstricks, pst-node}
+
+\usepackage{geometry}
+\geometry{textheight=10in, textwidth=7.5in}
+
+\newcommand{\cred}[1]{{\color{red}#1}}
+\newcommand{\cblue}[1]{{\color{blue}#1}}
+
+\usepackage{esint}
+\usepackage{hyperref}
+\usepackage{wasysym}
+
+\def\name{Dean Johnson}
+
+%% The following metadata will show up in the PDF properties
+\hypersetup{
+  colorlinks = true,
+  urlcolor = black,
+  pdfauthor = {\name},
+  pdfkeywords = {cs311 ``operating systems'' files filesystem I/O},
+  pdftitle = {CS 311 Project 1: UNIX File I/O},
+  pdfsubject = {CS 311 Project 1},
+  pdfpagemode = UseNone
+}
+
+\pagenumbering{gobble}
+\numberwithin{equation}{section}
+\parindent = 0.0 in
+\parskip = 0.2 in
+\setcounter{section}{1}
+
+\begin{document}
+\section*{Surface Integral}
+\hrule
+For a scalar function \textit{f} over a surface parameterized by \textit{u} and \textit{v}, the surface integral is given by
+
+\begin{align}
+    \Phi& = \int_{S} f \, \rm{d}\textit{a}\\
+    & = \int_{S} f \,(\textit{u}, \textit{v}) |\textbf{T}_u \times \textbf{T}_v |\, \rm{d}\textit{u} \, \rm{d}\textit{v}
+\end{align}
+
+where \textbf{T}$_u$ and \textbf{T}$_v$ are tangent vectors and $a \times b$ is the corss product.\\ \\
+For a vector function over a surface, the surface integral is given by
+
+\begin{align}
+    \Phi & = \int_{S} \textbf{F} \cdot \, \rm{d} \textbf{a} \\ 
+    & = \int_{S}(\textbf{F} \cdot \hat{\textbf{n}})\,\, \rm{d} \textit{a} \\
+    & = \int_{S} f_x \,\rm{d}\textit{y} \,\, \rm{d}\textit{z} \, + \, \textit{f}_\textit{y} \, \rm{d}\textit{z} \,\, 
+    \rm{d}\textit{x} \, + \, \textit{f}_\textit{z} \, \rm{d}\textit{x} \,\, \rm{d}\textit{y}
+\end{align}
+
+where $\textbf{a} \cdot \textbf{b}$ is a dot product and $\hat{n}$ is a unit normal vector. If $z = f(x, y)$,
+ the d\textbf{a} is given explicitly by
+
+\begin{align}
+    \rm{d}\textbf{a} \, = \, \pm \left(\frac{\partial\textit{z}}{\partial\textit{x}}\hat{x} \, - \, 
+    \frac{\partial\textit{z}}{\partial\textit{z}}\hat{y}\, + \, \hat{z}\right) \, \, 
+    \rm{d}\textit{x} \, \, \rm{d}\textit{y}
+\end{align}
+
+If the surface is \textit{surface parameterized} using $u$ and $v$, then
+
+\begin{align}
+    \Phi = \int_{S} \textbf{F} \cdot (\textbf{T}_u \times \textbf{T}_v )\, \rm{d}\textit{u} \, \, \rm{d}\textit{v}.
+\end{align}
+
+\clearpage
+
+%\numberwithin{equation}{section}
+\setcounter{section}{2}
+\setcounter{equation}{0}
+\section*{Maxwell's Equations}
+\hrule
+\begin{center}
+\includegraphics[scale=0.44]{maxwell.eps}
+\end{center}
+
+{\large \textbf{Integral Form}}
+
+
+\clearpage
+
+\section*{Grading Policies}
+\hrule
+
+\begin{enumerate}
+\item{All project must be submitted electronically by 23:59:59 on the due date via TEACH -- use "Check
+time on server" if unsure about your clock. TEACH time takes priority over your local computer.}
+\item {Only a single late homework assignment allowed. Only allowed up to 7 calendar days late.}
+\item {Submit late homework to your assigned TA via email.}
+\item {Blatant disrespect to or by the TAs will not be tolerated.}
+\item {If you do not demo your project, you do not receive credit for it.}
+\item {When you make an appointment to demo, show up. Failure to show up will result in a grade penalty.
+Repeated offenses will result in no credit for the assignment.}
+\item {If your project does not compile, for any reason, no credit will be.}
+\item {Compilation will be on os-class. This server is the final say on whether your code compiles.}
+\item {No directories in you submissions. You will be penalized for including any sort of hierarchy.}
+\item {All assignments submitted to TEACH. No late submissions will be accepted via TEACH.}
+\item {Naming convention: CS311 projhxi hengr usernamei.tar.bz2. Fill in hi with appropriate values.}
+\item {No zip files will be accepted. You must use bzipped tar files.}
+\item {All non-code documents must be created with LaTeX, by hand. This will be discussed in class.}
+\item {All work must be done individually unless specifically allowed to work in groups.}
+\end{enumerate}
+
+\section*{Learning Objectives}
+\hrule
+
+\begin{itemize}
+\item{Explain why multiprogramming is important for modern operating systems.}
+\item{Explain the general structure of a multiprogrammed operating system.}
+\item{Explain the purpose and operation of system calls.}
+\item{Write a program utilizing system calls.}
+\item{Write a program using a scripting language.}
+\item{Write a program that uses regular expressions to parse input data.}
+\item{Write a program that spawns processes and provides mutual exclusion for variables or other resources
+shared by the processes.}
+\item{Write a program that uses sockets to implement a client/server system.}
+\item{Explain how a common file system works, including structure, I/O operations, and security.}
+\item{Describe the memory organization of a typical process in a common operating system.}
+\end{itemize}
+
+
+
+%input the pygmentized output of mt19937ar.c, using a (hopefully) unique name
+%this file only exists at compile time. Feel free to change that.
+%\input{__mt.h.tex}
+\end{document}

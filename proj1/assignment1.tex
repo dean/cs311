@@ -1,0 +1,81 @@
+\documentclass[fleqn,10pt,titlepage]{article}
+
+\usepackage{graphicx}                                        
+
+\usepackage{amssymb}                                         
+\usepackage{amsmath}                                         
+\usepackage{amsthm}                                          
+
+\usepackage{alltt}                                           
+\usepackage{float}
+\usepackage{color}
+
+\usepackage{url}
+
+\usepackage{balance}
+\usepackage[TABBOTCAP, tight]{subfigure}
+\usepackage{enumitem}
+
+\usepackage[top=0.8in, left=1in, bottom=0.8in, right=1in]{geometry}
+
+\usepackage{pstricks, pst-node}
+
+\usepackage{geometry}
+\geometry{textheight=10in, textwidth=7.5in}
+
+\newcommand\numberthis{\addtocounter{equation}{1}\tag{\theequation}}
+\newcommand{\cred}[1]{{\color{red}#1}}
+\newcommand{\cblue}[1]{{\color{blue}#1}}
+
+\usepackage{hyperref}
+
+\def\name{Dean Johnson}
+
+%% The following metadata will show up in the PDF properties
+\hypersetup{
+  colorlinks = true,
+  urlcolor = black,
+  pdfauthor = {\name},
+  pdfkeywords = {cs311 ``operating systems'' files filesystem I/O},
+  pdftitle = {CS 311 Project 1: UNIX File I/O},
+  pdfsubject = {CS 311 Project 1},
+  pdfpagemode = UseNone
+}
+
+\pagenumbering{gobble}
+\numberwithin{equation}{section}
+\parindent = 0.0 in
+\parskip = 0.2 in
+
+\begin{document}
+
+\section{Part 1 -- 6 questions}
+\subsection*{1. Describe at least 2 ways of transferring files from a remote server to a local machine.}
+
+scp {[host:filepath on host]} {[destination]} ** Add the -r argument for more than 1 file or a directory. \\
+rsync {[host:filepath on host]} {[destination]} ** Add the -r argument for more than 1 file or a directory.
+
+\subsection*{2. What are revision control systems? Why are they useful? Explain how to create a subversion or git repository on os-class.}
+
+A revision control system is a tool used to track, and save, progress on a project. They are useful for 
+tracking documents that multiple people are working on in sync, and up-to-date. They are usually by programmers, to keep parts of a 
+project isolated from eachother, so issues with one portion of the project aren't conflicting with other portions of the project. 
+To create a git repository on os-class, run: \\
+git init {[repository name]}
+
+\subsection*{3. What is the difference between redirecting and piping? Describe each.}
+Piping is used to pass output from a program to another program, whereas redirecting is used for passing output from something other%
+that a program to a file or input stream.
+
+\subsection*{4. What is make, and how is it useful?}
+Make is a utility in linux, used for executing shell commands. It is usually used to compile files.
+
+\subsection*{5. Describe, in detail, the syntax of a makefile.}
+The syntax for a makefile goes: \\
+{[Dependencies]} (These include the the target and source for the compilation) \\
+{[Actions/Commands]} (These include the commands to run to compile the code)
+
+\subsection*{6. Give a find command that will run the file command on every regular file (not directories!) within the current filesystem subtree.}
+find -type f -exec file \{\} \textbackslash ;
+
+\end{document}

@@ -19,6 +19,6 @@ ps: dvi
 pdf: ps
 	ps2pdf writeup.ps
 
-c: assignment2.c
-	icc assignment2.c -o myar  
+c: myar.c
+	icc myar.c -std=c99 -o myar  
 

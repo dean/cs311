@@ -182,7 +182,6 @@ void append(char **f_names, int num_files, int verbose)
         lseek(ar_fd, 0, SEEK_END);
     }
 
-    printf("numfiles: %d", num_files);
     for(int i=1; i<num_files; i++)
     {
         int fd = open(f_names[i], O_RDONLY);
@@ -191,21 +190,16 @@ void append(char **f_names, int num_files, int verbose)
         struct ar_hdr header;
         make_header(&header, f_names[i], sb.st_mtime, sb.st_uid, sb.st_gid, sb.st_mode, sb.st_size);
 
-        printf("writing header...");
         // Write header
         write(ar_fd, &header, sizeof(header));
 
         // Seek past header
-        printf("not supposed to write yet");
 
         int num_written = 0;
         int num_read;
-        printf("started writing...");
         while((num_read = read(fd, buf, BLOCKSIZE)) > 0)
         {
-            printf("buf=%s\n", buf);
             num_written = write(ar_fd, buf, BLOCKSIZE);
-            printf("buf=%s\n", buf);
             if (num_written != num_read)
             {
                 printf("Num written not equal to num_read on file %s!", f_names[i]);

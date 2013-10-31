@@ -36,9 +36,6 @@ int main(int argc, char *argv[])
     {
         switch(c)
         {
-            case 'v': // If and only if other options are chosen, print verbose output
-                verbose = 1;
-                break;
             case 'q': // Quickly append files to archive
                 // append files
 
@@ -61,8 +58,10 @@ int main(int argc, char *argv[])
                 }
                 append(f_names, num_files, verbose);
                 break;
+            case 'v':
+                verbose = 1;
             case 't': // Print a concise table of contents
-                contents(argv[optind], 0);
+                contents(argv[optind], verbose);
                 break;
             case 'x': // Extract named files
 
@@ -220,8 +219,8 @@ void append(char **f_names, int num_files, int verbose)
         {
             write(ar_fd, "\n", 1);
         }
-
     }
+    close(ar_fd);
 
 }
 
@@ -250,16 +249,8 @@ void contents(char *ar_fname, int verbose)
         char name[16];
         char size[10]; // Needed for lseek
         extract_string(header, 0, 16, name);
-        /*
-        for(; i<16; i++)
-        {
-            if (header[i] != ' ')
-            {
-                name[i] = header[i];
-            }
-        }
-        */
-        if (verbose != 1)
+        extract_string(header, 48, 10, size);
+        if (verbose == 1)
         {
             char date[12];
             extract_string(header, 16, 12, date);
@@ -269,7 +260,6 @@ void contents(char *ar_fname, int verbose)
             extract_string(header, 34, 6, gid);
             char mode[8];
             extract_string(header, 40, 8, mode);
-            extract_string(header, 48, 10, size);
             for(int j=3; j<6; j++)
             {
                 char tmp[1];
@@ -289,19 +279,20 @@ void contents(char *ar_fname, int verbose)
             size_t a;
             a = strftime(c, sizeof(c), "%b %d %M:%S %Y ", temp);
             printf("%s", c);
-/*
-            //long filesize = atol(size);
-            //lseek(ar_fd, filesize, SEEK_CUR);
-            if (filesize % 2 == 1)
-            {
-                lseek(ar_fd, 1, SEEK_CUR);
-            }
-  */      }
+
+        }
+        long filesize = atol(size);
+        lseek(ar_fd, filesize, SEEK_CUR);
+        if (filesize % 2 == 1)
+        {
+            lseek(ar_fd, 1, SEEK_CUR);
+        }
+
         printf("%s", name);
 
-        lseek(ar_fd, sizeof(header) + atol(size), SEEK_CUR);
         printf("\n");
     }
+    close(ar_fd);
 }
 
 //  -x Extract named files

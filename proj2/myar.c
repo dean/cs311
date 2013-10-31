@@ -122,16 +122,41 @@ void usage(char *argv[])
     printf("Usage: %s key afile name ...", argv[0]);
 }
 
+void fill_space(char * arr, int size)
+{
+    printf("arr:%s size:%d\n", arr, size);
+    int flag = 0;
+    for(int i=0; i< size; i++)
+    {
+        if(arr[i] == '\0' || flag == 1)
+        {
+            printf("replace a '\\0'");
+            flag = 1;
+            arr[i] = ' ';
+        }
+    }
+    printf("\n");
+    printf("arr:%s size:%d\n", arr, size);
+    printf("\n");
+}
+
 void make_header(struct ar_hdr * header, char * fname, time_t time, uid_t uid, gid_t gid, mode_t PERMS, long filesize)
 {
+
     memcpy(header->ar_name, fname, 16);
+    fill_space(header->ar_name, 16);
     snprintf(header->ar_date, 12, "%ld", time); // get current time
+    fill_space(header->ar_date, 12);
     snprintf(header->ar_uid, 6, "%d", uid);
+    fill_space(header->ar_uid, 6);
     snprintf(header->ar_gid, 6, "%d", gid);
+    fill_space(header->ar_gid, 6);
     // Figure out more elegant way for this later...
     snprintf(header->ar_mode, 8, "%o", PERMS);
+    fill_space(header->ar_mode, 8);
     // Need to do some calculations for this first.
     snprintf(header->ar_size, 10, "%ld", filesize);
+    fill_space(header->ar_size, 10);
     memcpy(header->ar_fmag, ARFMAG, 2);
 }
 
@@ -147,35 +172,14 @@ void append(char **f_names, int num_files, int verbose)
     }
 
     // Need to calculate this out
-    long filesize = 0;
-    struct ar_hdr ar_header;
     struct ar_hdr header;
     int contents;
 
-    // Total up file size
-    for(int i=1; i<num_files; i++)
-    {
-        int fd = open(f_names[i], O_RDONLY);
-        struct stat sb;
-        fstat(fd, &sb);
+    // Write archive identifier
+    write(ar_fd, ARMAG, SARMAG);
 
-        // Write header
-        filesize += sizeof(header);
-        filesize += sb.st_size;
-
-        // Account for odd filesize
-        int odd = sb.st_size % 2;
-
-        if (odd == 1)
-        {
-            filesize += 1;
-        }
-
-    }
-
-    // Initial archive header
-    make_header(&ar_header, f_names[0], time(NULL), getuid(), getgid(), S_IRWUGO, filesize);
-    write(ar_fd, &ar_header, sizeof(ar_header));
+    // seek to end of file
+    lseek(ar_fd, 8, SEEK_SET);
 
     for(int i=1; i<num_files; i++)
     {
@@ -187,13 +191,16 @@ void append(char **f_names, int num_files, int verbose)
         // Write header
         write(ar_fd, &header, sizeof(header));
 
+        // Seek past header
+        lseek(ar_fd, 0, SEEK_END);
+
         int num_written = 0;
-        int num_read = 0;
-        char * buf;
-        // random comment
+        int num_read;
+        char buf[BLOCKSIZE];
         while((num_read = read(fd, buf, BLOCKSIZE)) > 0)
         {
             num_written = write(ar_fd, buf, BLOCKSIZE);
+            printf("wrote: %s", buf);
             if (num_written != num_read)
             {
                 printf("Num written not equal to num_read on file %s!", f_names[i]);
@@ -207,6 +214,7 @@ void append(char **f_names, int num_files, int verbose)
         if (odd == 1)
         {
             write(ar_fd, "\n", 1);
+            lseek(ar_fd, 1, SEEK_SET);
         }
 
     }
@@ -217,7 +225,14 @@ void append(char **f_names, int num_files, int verbose)
 void contents(char *ar_fname, int verbose)
 {
     int ar_fd = open(ar_fname, O_RDONLY, S_IRWXUGO);
+    lseek(ar_fd, 8, SEEK_SET); // skip ar declaration.
+    char * header;
+    read(ar_fd, header, 60); // Block size is 60
 
+    if (verbose != 1)
+    {
+
+    }
 }
 
 //  -x Extract named files

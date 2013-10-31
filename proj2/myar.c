@@ -17,6 +17,7 @@
 
 void usage(char *[]);
 void append(char **, int, int);
+void contents(char *, int);
 
 int main(int argc, char *argv[])
 {
@@ -61,7 +62,7 @@ int main(int argc, char *argv[])
                 append(f_names, num_files, verbose);
                 break;
             case 't': // Print a concise table of contents
-
+                contents(argv[optind], 0);
                 break;
             case 'x': // Extract named files
 
@@ -124,20 +125,15 @@ void usage(char *argv[])
 
 void fill_space(char * arr, int size)
 {
-    printf("arr:%s size:%d\n", arr, size);
     int flag = 0;
     for(int i=0; i< size; i++)
     {
         if(arr[i] == '\0' || flag == 1)
         {
-            printf("replace a '\\0'");
             flag = 1;
             arr[i] = ' ';
         }
     }
-    printf("\n");
-    printf("arr:%s size:%d\n", arr, size);
-    printf("\n");
 }
 
 void make_header(struct ar_hdr * header, char * fname, time_t time, uid_t uid, gid_t gid, mode_t PERMS, long filesize)
@@ -164,7 +160,7 @@ void make_header(struct ar_hdr * header, char * fname, time_t time, uid_t uid, g
 void append(char **f_names, int num_files, int verbose)
 {
     // We rewrite the file even if it exists.
-    int ar_fd = open(f_names[0], O_WRONLY | O_CREAT, S_IRWXUGO);
+    int ar_fd = open(f_names[0], O_RDWR | O_CREAT, S_IRWXUGO);
     if (ar_fd < 0)
     {
         printf("Opening of archive was unsuccessful...");
@@ -172,66 +168,139 @@ void append(char **f_names, int num_files, int verbose)
     }
 
     // Need to calculate this out
-    struct ar_hdr header;
     int contents;
+    char buf[BLOCKSIZE];
 
     // Write archive identifier
-    write(ar_fd, ARMAG, SARMAG);
+    int n_read;
+    if (n_read = read(ar_fd, buf, BLOCKSIZE) == 0)
+    {
+        lseek(ar_fd, 0, SEEK_SET);
+        write(ar_fd, ARMAG, SARMAG);
+    }
+    else
+    {
+        lseek(ar_fd, 0, SEEK_END);
+    }
 
-    // seek to end of file
-    lseek(ar_fd, 8, SEEK_SET);
-
+    printf("numfiles: %d", num_files);
     for(int i=1; i<num_files; i++)
     {
         int fd = open(f_names[i], O_RDONLY);
         struct stat sb;
         fstat(fd, &sb);
+        struct ar_hdr header;
         make_header(&header, f_names[i], sb.st_mtime, sb.st_uid, sb.st_gid, sb.st_mode, sb.st_size);
 
+        printf("writing header...");
         // Write header
         write(ar_fd, &header, sizeof(header));
 
         // Seek past header
-        lseek(ar_fd, 0, SEEK_END);
+        printf("not supposed to write yet");
 
         int num_written = 0;
         int num_read;
-        char buf[BLOCKSIZE];
+        printf("started writing...");
         while((num_read = read(fd, buf, BLOCKSIZE)) > 0)
         {
+            printf("buf=%s\n", buf);
             num_written = write(ar_fd, buf, BLOCKSIZE);
-            printf("wrote: %s", buf);
+            printf("buf=%s\n", buf);
             if (num_written != num_read)
             {
                 printf("Num written not equal to num_read on file %s!", f_names[i]);
                 exit(0);
             }
         }
-
         // Account for even offset
         int odd = sb.st_size % 2;
 
         if (odd == 1)
         {
             write(ar_fd, "\n", 1);
-            lseek(ar_fd, 1, SEEK_SET);
         }
 
     }
 
 }
 
+void extract_string(char * src, int start_index, int count, char * dest)
+{
+    for(int i = start_index, j = 0; i < start_index + count; i++, j++)
+    {
+        if (src[i] != ' ')
+        {
+            dest[j] = src[i];
+        }
+    }
+}
+
 // -t Print a concise table of contents
 void contents(char *ar_fname, int verbose)
 {
-    int ar_fd = open(ar_fname, O_RDONLY, S_IRWXUGO);
+    int ar_fd = open(ar_fname, O_RDWR, S_IRWXUGO);
     lseek(ar_fd, 8, SEEK_SET); // skip ar declaration.
-    char * header;
-    read(ar_fd, header, 60); // Block size is 60
-
-    if (verbose != 1)
+    char header[60];
+    int num_read;
+    while((num_read = read(ar_fd, header, 60)) > 0)
     {
 
+        int i = 0;
+        char name[16];
+        char size[10]; // Needed for lseek
+        extract_string(header, 0, 16, name);
+        /*
+        for(; i<16; i++)
+        {
+            if (header[i] != ' ')
+            {
+                name[i] = header[i];
+            }
+        }
+        */
+        if (verbose != 1)
+        {
+            char date[12];
+            extract_string(header, 16, 12, date);
+            char uid[6];
+            extract_string(header, 28, 6, uid);
+            char gid[6];
+            extract_string(header, 34, 6, gid);
+            char mode[8];
+            extract_string(header, 40, 8, mode);
+            extract_string(header, 48, 10, size);
+            for(int j=3; j<6; j++)
+            {
+                char tmp[1];
+                tmp[0] = mode[j];
+                int mode_num = atoi(tmp);
+                printf("%c", mode_num == 4 || mode_num == 6 || mode_num == 7 ? 'r' : '-');
+                printf("%c", mode_num == 2 || mode_num == 3 || mode_num == 6 || mode_num == 7 ? 'w' : '-');
+                printf("%c", mode_num == 1 || mode_num == 3 || mode_num == 5 || mode_num == 7 ? 'x' : '-');
+            }
+            printf(" ");
+            printf("%d/%d\t", atoi(uid), atoi(gid));
+            printf("%ld ", atol(size));
+            time_t t = (time_t) atol(date);
+            struct tm *temp;
+            temp = localtime(&t);
+            char c[100];
+            size_t a;
+            a = strftime(c, sizeof(c), "%b %d %M:%S %Y ", temp);
+            printf("%s", c);
+/*
+            //long filesize = atol(size);
+            //lseek(ar_fd, filesize, SEEK_CUR);
+            if (filesize % 2 == 1)
+            {
+                lseek(ar_fd, 1, SEEK_CUR);
+            }
+  */      }
+        printf("%s", name);
+
+        lseek(ar_fd, sizeof(header) + atol(size), SEEK_CUR);
+        printf("\n");
     }
 }
 

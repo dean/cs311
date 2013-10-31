@@ -13,6 +13,7 @@
 
 #define S_IRWXUGO S_IRWXU | S_IRWXG | S_IRWXO
 #define S_IRWUGO S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH
+#define BLOCKSIZE 1
 
 void usage(char *[]);
 void append(char **, int, int);
@@ -121,6 +122,19 @@ void usage(char *argv[])
     printf("Usage: %s key afile name ...", argv[0]);
 }
 
+void make_header(struct ar_hdr * header, char * fname, time_t time, uid_t uid, gid_t gid, mode_t PERMS, long filesize)
+{
+    memcpy(header->ar_name, fname, 16);
+    snprintf(header->ar_date, 12, "%ld", time); // get current time
+    snprintf(header->ar_uid, 6, "%d", uid);
+    snprintf(header->ar_gid, 6, "%d", gid);
+    // Figure out more elegant way for this later...
+    snprintf(header->ar_mode, 8, "%o", PERMS);
+    // Need to do some calculations for this first.
+    snprintf(header->ar_size, 10, "%ld", filesize);
+    memcpy(header->ar_fmag, ARFMAG, 2);
+}
+
 // -q Quickly append all files to archive
 void append(char **f_names, int num_files, int verbose)
 {
@@ -128,24 +142,75 @@ void append(char **f_names, int num_files, int verbose)
     int ar_fd = open(f_names[0], O_WRONLY | O_CREAT, S_IRWXUGO);
     if (ar_fd < 0)
     {
-        printf("Opening of archive was not successful...");
+        printf("Opening of archive was unsuccessful...");
         exit(0);
     }
 
-    printf("sizeof(arhdr): %d", sizeof(struct ar_hdr));
+    // Need to calculate this out
+    long filesize = 0;
     struct ar_hdr ar_header;
-    long file_size = 0;
-    memcpy(ar_header.ar_name, f_names[0], 16);
-    snprintf(ar_header.ar_date, 12, "%ld", time(NULL)); // get current time
-    snprintf(ar_header.ar_uid, 6, "%d", getuid());
-    snprintf(ar_header.ar_gid, 6, "%d", getgid());
-    // Figure out more elegant way for this later...
-    //ar_header.ar_mode = "0666";
-    // Need to do some calculations for this first.
-    snprintf(ar_header.ar_size, 10, "%ld", file_size);
-    memcpy(ar_header.ar_fmag, ARFMAG, 2);
+    struct ar_hdr header;
+    int contents;
 
-    printf("sizeof(arhdr): %d", sizeof(ar_header));
+    // Total up file size
+    for(int i=1; i<num_files; i++)
+    {
+        int fd = open(f_names[i], O_RDONLY);
+        struct stat sb;
+        fstat(fd, &sb);
+
+        // Write header
+        filesize += sizeof(header);
+        filesize += sb.st_size;
+
+        // Account for odd filesize
+        int odd = sb.st_size % 2;
+
+        if (odd == 1)
+        {
+            filesize += 1;
+        }
+
+    }
+
+    // Initial archive header
+    make_header(&ar_header, f_names[0], time(NULL), getuid(), getgid(), S_IRWUGO, filesize);
+    write(ar_fd, &ar_header, sizeof(ar_header));
+
+    for(int i=1; i<num_files; i++)
+    {
+        int fd = open(f_names[i], O_RDONLY);
+        struct stat sb;
+        fstat(fd, &sb);
+        make_header(&header, f_names[i], sb.st_mtime, sb.st_uid, sb.st_gid, sb.st_mode, sb.st_size);
+
+        // Write header
+        write(ar_fd, &header, sizeof(header));
+
+        int num_written = 0;
+        int num_read = 0;
+        char * buf;
+        // random comment
+        while((num_read = read(fd, buf, BLOCKSIZE)) > 0)
+        {
+            num_written = write(ar_fd, buf, BLOCKSIZE);
+            if (num_written != num_read)
+            {
+                printf("Num written not equal to num_read on file %s!", f_names[i]);
+                exit(0);
+            }
+        }
+
+        // Account for even offset
+        int odd = sb.st_size % 2;
+
+        if (odd == 1)
+        {
+            write(ar_fd, "\n", 1);
+        }
+
+    }
+
 }
 
 // -t Print a concise table of contents

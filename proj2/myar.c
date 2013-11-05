@@ -267,11 +267,10 @@ void contents(char *ar_fname, int verbose)
             printf("%d/%d\t", atoi(uid), atoi(gid));
             printf("%ld ", atol(size));
             time_t t = (time_t) atol(date);
-            struct tm *temp;
-            temp = localtime(&t);
+            struct tm *time;
+            time = localtime(&t);
             char c[100];
-            size_t a;
-            a = strftime(c, sizeof(c), "%b %d %M:%S %Y ", temp);
+            strftime(c, sizeof(c), "%b %d %M:%S %Y ", time);
             printf("%s", c);
 
         }

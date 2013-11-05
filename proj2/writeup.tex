@@ -14,7 +14,8 @@
 \newcommand{\cred}[1]{{\color{red}#1}}
 \newcommand{\cblue}[1]{{\color{blue}#1}}
 
-\usepackage{hyperref}
+\usepackage{longtable, hyperref}
+\newcommand{\longtableendfoot}{Please continue at the next page}
 
 \def\name{Dean Johnson}
 
@@ -47,25 +48,105 @@ file provided in the arguments, by saving the file descriptor information, then 
 \subsubsection{Extraction}
 Read the information about the archive file, then begin extraction on the first file stored inside, and so on.
 \subsection{Deviations}
-Deviations from initial design...
+Originally I thought that the archive had it's own ar header, but then I realized it didn't. This made things much easier.
 \clearpage
 
 \section{Work Log}
 Git log...
+
+commit 15fae003cd9826be4e76cbae9f95af4c43b9140f
+Author: Dean Johnson <deanjohnson222@gmail.com>
+Date:   Wed Oct 30 23:09:07 2013 -0700
+
+    Cleanup
+
+commit 202b4a7e15adb791e34eb76c56b59b49d7cea565
+Author: Dean Johnson <deanjohnson222@gmail.com>
+Date:   Wed Oct 30 23:06:35 2013 -0700
+
+    Finished -t, -v, -q
+
+commit 93b524eccd0ef7ca93aabfc5db498db86343e5e2
+Author: Dean Johnson <deanjohnson222@gmail.com>
+Date:   Wed Oct 30 22:33:43 2013 -0700
+
+    Added -t functionality and fixed -q.
+
+commit 0c121c5eb041a5741f57297e5ef90542d53d7761
+Author: Dean Johnson <deanjohnson222@gmail.com>
+Date:   Wed Oct 30 19:53:41 2013 -0700
+
+    Added -q functionality
+
+commit 47defae5a19bd753281fe6c409a34d7df45fb916
+Author: Dean Johnson <deanjohnson222@gmail.com>
+Date:   Wed Oct 30 18:57:27 2013 -0700
+
+    Added lots of functionality to -q
+
+commit 79b38421987dd2af416a21bd753c5a5a801fc90c
+Author: Dean Johnson <deanjohnson222@gmail.com>
+Date:   Mon Oct 28 19:33:41 2013 -0700
+
+    Added partial functionality for archive appending.
+    
+    Added the archive file header assignment, for archive appending.
+    Still need to write the rest of the arguments.
+
+commit 8c65caee0301a863d8adb0f3d9b1a7e0746dbfe1
+Author: Dean Johnson <deanjohnson222@gmail.com>
+Date:   Sat Oct 26 16:07:36 2013 -0700
+
+    Outlined most of the assignment in the code.
+
+commit fe42c7b54d42b5fe8bb7b99beab047d1f857b3ed
+Author: Dean Johnson <deanjohnson222@gmail.com>
+Date:   Fri Oct 18 13:44:04 2013 -0700
+
+    Added initial design to TEX file.
+    
+    Also updated makefile.
+
+commit 284c28746481c955e5692a929ace45fd3143384f
+Author: Dean Johnson <deanjohnson222@gmail.com>
+Date:   Fri Oct 18 13:20:49 2013 -0700
+
+    Added writeup template.
+    
+    Also editted the makefil to compile both my TEX document and C
+    code.
+
+commit 03d5e4951b4728b3d78152bdcd642a5bdca198da
+Author: Dean Johnson <deanjohnson222@gmail.com>
+Date:   Thu Oct 17 20:31:18 2013 -0700
+
+    Added makefile
+
+commit c3a93a02617cab1c1db3efdae0f5487d0dc68e3f
+Author: Dean Johnson <deanjohnson222@gmail.com>
+Date:   Thu Oct 17 20:25:04 2013 -0700
+
+    Starting second assignment
+
+commit 78019014c9baa462f98e0a7c94c11ff13baef36a
+Author: Dean Johnson <johnsdea@flip1.engr.oregonstate.edu>
+Date:   Thu Oct 17 20:20:16 2013 -0700
+
+    First assignment
 \clearpage
 
 \section{Challenges}
 \begin{itemize}
-\item Challenge 1...
-\item Challenge 2...
+\item Lseeking through the file, while reading: This caused me to run into issues of running through the file too far.
+\item Not padding the spaces when pulling data from stat caused weird issues when trying to archive initially.
 \end{itemize}
 \clearpage
 
 \section{Questions}
 \begin{enumerate}
-\item What do you think the main point of this assignment is? \\ Answer
-\item How did you ensure your assignment was correct? Testing details, for instance. \\ Thorough answer.
-\item What did you learn? \\ Answer
+\item What do you think the main point of this assignment is? \\ To make us hate ourselves. No, but really, to leanr how file I/O works.
+\item How did you ensure your assignment was correct? Testing details, for instance. \\ I tested it with ar. It returns the same results as ar for -q and -tv.
+\item What did you learn? \\ File I/O is tough to deal with at low levels, and we should be appreciative of how high level it's become in languages like Python.
 \end{enumerate}
 
 \end{document}

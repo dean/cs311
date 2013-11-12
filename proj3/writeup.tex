@@ -39,8 +39,14 @@
 \section{Design}
 \hrule
 \subsection{Initial Implementation}
-\subsubsection{Part 1}
-\subsubsection{Part 2}
+\begin{enumerate}
+\item Read in number of processes to run via getopt \\
+\item Use a 2D array with 2 * x number of processes for reading and writing to pipes \\
+\item Push words from each line of the file to each pipe until all words are gone \\
+\item Exec sort on each pipe \\
+\item Pop words from each pipe in alphabetical order to stdout \\
+\item Record time for each of these full processes on multiple types/sizes of files \\
+\end{enumerate}
 \subsection{Deviations}
 \clearpage
 
@@ -55,7 +61,7 @@ Git log
 
 \section{Questions}
 \begin{enumerate}
-\item What do you think the main point of this assignment is? \\ 
+\item What do you think the main point of this assignment is?:  \\ 
 \item How did you ensure your assignment was correct? Testing details, for instance. \\ 
 \item What did you learn? \\ 
 \end{enumerate}

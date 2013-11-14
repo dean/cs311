@@ -19,6 +19,6 @@ ps: dvi
 pdf: ps
 	ps2pdf writeup.ps
 
-c: myar.c
+c: uniqify.c
 	icc uniqify.c -std=c99 -o uniqify  
 

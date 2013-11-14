@@ -48,22 +48,56 @@
 \item Record time for each of these full processes on multiple types/sizes of files \\
 \end{enumerate}
 \subsection{Deviations}
+When writing the initial implementation, I didn't quite understand how program was supposed to work,
+so it ended up missing steps such as sending signals, and waiting on child processes for things to be
+done in the parent. I also missed recording a step for counting the number of unique words. 
 \clearpage
 
 \section{Work Log}
-Git log
+commit ad8a077c1e1f52334de82b9c5a1af26a6631edfe
+Author: Dean Johnson <deanjohnson222@gmail.com>
+Date:   Wed Nov 13 20:52:48 2013 -0800
+
+    Lots of changes.
+
+commit 86e866b41a0c0618d1125e2701e48c822271f068
+Author: Dean Johnson <deanjohnson222@gmail.com>
+Date:   Tue Nov 8 01:21:12 2013 -0800
+
+    Added initial implementation for assignment to tex document.
+
+commit 3e2823a316d0f1a33d7817e656269f7b7dabd931
+Author: Dean Johnson <deanjohnson222@gmail.com>
+Date:   Wed Nov 6 18:31:05 2013 -0800
+
+    Init proj3
+
+commit 073f686ca43fc8a427bd8a0c69d25c964c16ec81
+Author: Dean Johnson <deanjohnson222@gmail.com>
+Date:   Mon Nov 4 16:14:28 2013 -0800
+
+    Minor cleanup.
 \clearpage
 
 \section{Challenges}
 \begin{itemize}
+\item Understanding how file streams work.
+\item Understanding how pipes work.
+\item Understanding how to implement signals and send data between processees.
+\item Stringing all the confusing portions fo the project together.
 \end{itemize}
 \clearpage
 
 \section{Questions}
 \begin{enumerate}
-\item What do you think the main point of this assignment is?:  \\ 
-\item How did you ensure your assignment was correct? Testing details, for instance. \\ 
-\item What did you learn? \\ 
+\item What do you think the main point of this assignment is?:  To really teach us how pipes, files, and 
+asynchonous processes work. Additionally, preparing us for the next assignment using threads. (Even though
+the environment is different)\\ 
+\item How did you ensure your assignment was correct? Testing details, for instance. I tested my code with
+different amounts of words, different orders of the words, and with simple data sets I could verify myself.\\ 
+\item What did you learn? I learned how to implement pipes, and send signals to processes. I sort of understood
+how forking worked with children from a parent process initially, but it didn't really become concrete until I
+started implementing the spawning for the children on the assignment.\\ 
 \end{enumerate}
 
 \end{document}

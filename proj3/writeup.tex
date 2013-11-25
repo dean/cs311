@@ -50,10 +50,17 @@
 \subsection{Deviations}
 When writing the initial implementation, I didn't quite understand how program was supposed to work,
 so it ended up missing steps such as sending signals, and waiting on child processes for things to be
-done in the parent. I also missed recording a step for counting the number of unique words. 
+done in the parent. I also didn't realize I'd have to write my own function to evaluate which word had
+the lowest value (to push to stdout next), so I wrote that as well.
 \clearpage
 
 \section{Work Log}
+commit 7082052648df9f029c601f61cf641e1aefc73ced
+Author: Dean Johnson <deanjohnson222@gmail.com>
+Date:   Wed Nov 13 22:41:03 2013 -0800
+
+    More additions to get rid of errors.
+
 commit ad8a077c1e1f52334de82b9c5a1af26a6631edfe
 Author: Dean Johnson <deanjohnson222@gmail.com>
 Date:   Wed Nov 13 20:52:48 2013 -0800
@@ -94,7 +101,7 @@ Date:   Mon Nov 4 16:14:28 2013 -0800
 asynchonous processes work. Additionally, preparing us for the next assignment using threads. (Even though
 the environment is different)\\ 
 \item How did you ensure your assignment was correct? Testing details, for instance. I tested my code with
-different amounts of words, different orders of the words, and with simple data sets I could verify myself.\\ 
+different amounts of words, different orders of the words, and sending different numbers of words.\\ 
 \item What did you learn? I learned how to implement pipes, and send signals to processes. I sort of understood
 how forking worked with children from a parent process initially, but it didn't really become concrete until I
 started implementing the spawning for the children on the assignment.\\ 

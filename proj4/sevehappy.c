@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <limits.h>
+#include <pthread.h>
 #include <stdlib.h>
 #include <signal.h>
 #include <stdbool.h>
@@ -22,12 +23,23 @@
 #define BLOCKSIZE 1
 #define BITS_PER_BYTE 8
 
+void count_parallel(char *, int, int, int);
+int get_next_divisible(int, int);
 void get_primes_unthreaded();
+void get_primes_threaded(int);
+void mark_between(void *);
 void mark_to_index(unsigned char *, int, int, unsigned int, int *);
 bool marked(unsigned char *, int);
 void mark(unsigned char *, int);
 int sum_square_digits(int);
 void usage();
+
+struct bounds {
+    char * bitmap;
+    int base;
+    int lower_bound;
+    int upper_bound;
+}
 
 int main(int argc, char *argv[])
 {
@@ -88,6 +100,67 @@ void get_primes_unthreaded() {
             printf("%d: %s\n", i, happy == true ? "Happy! :)" : "Sad :(");
         }
     }
+}
+
+void get_primes_threaded(int num_threads) {
+    unsigned char * bitmap = (unsigned char *) malloc((UINT_MAX/BITS_PER_BYTE) + 1);
+    int num_primes = 255;
+    for (int i=2; i<=sqrt(255); i++) {
+        if (marked(bitmap, i) == 0) {
+            count_parallel(bitmap, i, UINT_MAX, num_threads);
+        }
+    }
+    int unhappy_numbers[] = {4, 16, 37, 58, 89, 145, 42, 20}; 
+    for (int i=2; i<=255; i++) {
+        if (!marked(bitmap, i)) {
+            int num = i;
+            bool end = false;
+            bool happy = false;
+            while (!end) {
+                num  = sum_square_digits(num);
+                if (num == 1) {
+                    happy = true;
+                    break;
+                }
+                for (int i=0; i<8; i++) {
+                    if (num == unhappy_numbers[i]) {
+                        end = true;
+                        break;
+                    }
+                }
+            }
+            
+            printf("%d: %s\n", i, happy == true ? "Happy! :)" : "Sad :(");
+        }
+    }
+}
+
+void count_parallel(char * bitmap, int base, int upper_bound, int num_threads) {
+    pthread_t tids[num_threads];
+    struct bounds[num_threads];
+    int iter = (upper_bound-base)/num_threads;
+    for(int i=0; i<num_threads; i++) {
+        bounds[i]->bitmap = bitmap;
+        bounds[i].base = base;
+        bounds[i].start = get_next_divisible(base, i*iter);
+        bounds[i].upper_bound = i*iter + iter;
+        pthread_create(&tid[i], NULL, &mark_between, bounds[i]);
+    }
+
+    mark_to_index(bitmap, start, start*2, upper_bound, &num_primes);
+
+}
+
+// Gets next divisible integer, so it is known where to start each thread
+int get_next_divisible(int base, int start) {
+    while (start % base != 0) {
+        start++;
+    }
+    return start;
+}
+
+void mark_between(void *bounds) {
+
 }
 
 int sum_square_digits(int num) {

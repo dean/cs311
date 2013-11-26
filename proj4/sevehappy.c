@@ -23,23 +23,25 @@
 #define BLOCKSIZE 1
 #define BITS_PER_BYTE 8
 
-void count_parallel(char *, int, int, int);
-int get_next_divisible(int, int);
+void count_parallel(unsigned char *, int, unsigned int, int);
+int get_next_num(unsigned char *, int *, int, unsigned int);
 void get_primes_unthreaded();
 void get_primes_threaded(int);
-void mark_between(void *);
-void mark_to_index(unsigned char *, int, int, unsigned int, int *);
-bool marked(unsigned char *, int);
-void mark(unsigned char *, int);
+void * mark_between(void *);
+void mark_to_index(unsigned char *, int, int, unsigned int);
+bool marked(unsigned char *, unsigned int);
+void mark(unsigned char *, unsigned int);
 int sum_square_digits(int);
 void usage();
 
 struct bounds {
-    char * bitmap;
+    unsigned char * bitmap;
     int base;
-    int lower_bound;
-    int upper_bound;
-}
+    unsigned int lower_bound;
+    unsigned int upper_bound;
+};
+
+pthread_mutex_t mutex;
 
 int main(int argc, char *argv[])
 {
@@ -63,22 +65,24 @@ int main(int argc, char *argv[])
                 break;
         }
     }
-    get_primes_unthreaded();
+    //get_primes_unthreaded();
+    get_primes_threaded(num_threads);
+    //get_primes_unthreaded();
 }
 
 void get_primes_unthreaded() {
     unsigned char * bitmap = (unsigned char *) malloc((UINT_MAX/BITS_PER_BYTE) + 1);
-    unsigned int max = UINT_MAX;
+    unsigned int max = UINT_MAX-1;
     int i;
-    int num_primes = 255;
-    for (i=2; i<=sqrt(255); i++) {
+    int num_primes = max;
+    for (i=2; i<=sqrt(max); i++) {
         if (marked(bitmap, i) == 0) {
-            mark_to_index(bitmap, i, i*2, 255, &num_primes);
-            printf("num primes=%d\n", num_primes);
+            printf("Marking Composites for: %d\n", i);
+            mark_to_index(bitmap, i, i*2, max);
         }
     }
     int unhappy_numbers[] = {4, 16, 37, 58, 89, 145, 42, 20}; 
-    for (i=2; i<=255; i++) {
+    for (i=2; i<=max; i++) {
         if (!marked(bitmap, i)) {
             int num = i;
             bool end = false;
@@ -104,12 +108,15 @@ void get_primes_unthreaded() {
 
 void get_primes_threaded(int num_threads) {
     unsigned char * bitmap = (unsigned char *) malloc((UINT_MAX/BITS_PER_BYTE) + 1);
+    printf("Addr of bitmap: %p\n", bitmap);
+    printf("Size of bitmap: %ld\n", sizeof(bitmap));
     int num_primes = 255;
-    for (int i=2; i<=sqrt(255); i++) {
-        if (marked(bitmap, i) == 0) {
-            count_parallel(bitmap, i, UINT_MAX, num_threads);
-        }
-    }
+    //for (int i=2; i<=sqrt(255); i++) {
+    //    if (marked(bitmap, i) == 0) {
+            count_parallel(bitmap, 2, 255, num_threads);
+    //    }
+    //}
+    /*
     int unhappy_numbers[] = {4, 16, 37, 58, 89, 145, 42, 20}; 
     for (int i=2; i<=255; i++) {
         if (!marked(bitmap, i)) {
@@ -133,63 +140,87 @@ void get_primes_threaded(int num_threads) {
             printf("%d: %s\n", i, happy == true ? "Happy! :)" : "Sad :(");
         }
     }
+    */
 }
 
-void count_parallel(char * bitmap, int base, int upper_bound, int num_threads) {
+void count_parallel(unsigned char * bitmap, int base, unsigned int upper_bound, int num_threads) {
+    printf("Into count_parallell. b upper: %d %d\n", upper_bound, base);
     pthread_t tids[num_threads];
-    struct bounds[num_threads];
-    int iter = (upper_bound-base)/num_threads;
-    for(int i=0; i<num_threads; i++) {
-        bounds[i]->bitmap = bitmap;
-        bounds[i].base = base;
-        bounds[i].start = get_next_divisible(base, i*iter);
-        bounds[i].upper_bound = i*iter + iter;
-        pthread_create(&tid[i], NULL, &mark_between, bounds[i]);
+    struct bounds b[num_threads];
+    int current_nums[num_threads];
+    printf("found something?");
+    int num = get_next_num(bitmap, current_nums, num_threads, upper_bound);
+    while(num) {
+        for (int i=0; i< num_threads && num >= 2; i++) {
+            b[i].bitmap = bitmap;
+            b[i].base = num;
+            current_nums[i] = base;
+            // Allows the bounds to be set correctly.
+            b[i].lower_bound = num*2;
+            b[i].upper_bound = upper_bound;
+            pthread_create(&tids[i], NULL, mark_between, &b[i]);
+            num = get_next_num(bitmap, current_nums, num_threads, upper_bound);
+        }
     }
-
-    mark_to_index(bitmap, start, start*2, upper_bound, &num_primes);
-
 }
 
-// Gets next divisible integer, so it is known where to start each thread
-int get_next_divisible(int base, int start) {
-    while (start % base != 0) {
-        start++;
+int get_next_num(unsigned char * bitmap, int current_nums[], int num_threads, unsigned int upper_bound) {
+    printf("finished nothing");
+    int max = 0;
+    for (int i=0; i<num_threads; i++) {
+        if (current_nums[i] > max) {
+            max = current_nums[i];
+        }
     }
-    return start;
+    printf("finished first");
+    if (max == 0) {
+        return 2;
+    }
+    if (max <= (int)sqrt(upper_bound)) {
+        for (int i=max; i < (int)sqrt(upper_bound); i++) {
+            if (!marked(bitmap, i)) {
+                return i;
+            }
+        }
+    }
+    printf("finished second");
+    return -1;
 }
 
-void mark_between(void *bounds) {
-
+void * mark_between(void * ptr) {
+    printf("Spawned threads.\n");
+    struct bounds * b = (struct bounds *) ptr; 
+    printf("Lets see the upper bound of b: %d\n", b->upper_bound);
+    mark_to_index(b->bitmap, b->base, b->lower_bound, b->upper_bound);
+    return (void *) NULL;
 }
 
 int sum_square_digits(int num) {
     // Number won't go above 1000
     int sum = 0;
-    for (int i=0; i < 4; i++) {
-        if (num < 10) {
-            sum += pow(num, 2);
-            return sum;
-        }
+    while (num >=10) {
         sum += pow(num % 10, 2);
         num /= 10;
     }
+    sum += pow(num, 2);
     return sum;
-    
-    
 }
 
-void mark_to_index(unsigned char bitmap[], int m, int start, unsigned int end, int * num_primes) {
+void mark_to_index(unsigned char * bitmap, int m, int start, unsigned int end) {
+    printf("top level: m=%d, start=%d, end=%d\n", m, start, end); 
     for (unsigned int i = start; i < end; i+=m) {
+        if (end > 255) {
+            printf("inner-inner level: m=%d, start=%d, end= %d\n", m, start, end);
+            printf("Exitting...");
+            exit(-1);
+        }
         if (!marked(bitmap, i)) {
-            printf("marking %d as composite\n", i);
             mark(bitmap, i);
-            *num_primes -= 1;
         }
     }
 }
 
-bool marked(unsigned char bitmap[], int ind) {
+bool marked(unsigned char bitmap[], unsigned int ind) {
     int remainder = ind % BITS_PER_BYTE;
     int bit_ind = ind / BITS_PER_BYTE;
     // & Compares bits at the byte level, so we just check to see
@@ -197,12 +228,10 @@ bool marked(unsigned char bitmap[], int ind) {
     return (bitmap[bit_ind] & (1 << remainder)) == pow(2, remainder);
 }
 
-void mark(unsigned char bitmap[], int ind) {
-    int remainder = ind % BITS_PER_BYTE;
-    int bit_ind = ind / BITS_PER_BYTE;
-    printf("marked before?=%d\n", marked(bitmap, ind));
-    bitmap[bit_ind] = (int)bitmap[bit_ind] + (int)pow(2, remainder);
-    printf("marked after?=%d\n\n", marked(bitmap, ind));
+void mark(unsigned char bitmap[], unsigned int ind) {
+    unsigned int remainder = ind % BITS_PER_BYTE;
+    unsigned int bit_ind = ind / BITS_PER_BYTE;
+    bitmap[bit_ind] |= (1 << remainder);
 }
 
 void usage() {

@@ -24,18 +24,18 @@
 #define BITS_PER_BYTE 8
 
 unsigned int adjust_lower_bound(int, unsigned int);
-void happy_parallel(unsigned char *, int, unsigned int, int);
 void count_parallel(unsigned char *, int, unsigned int, int);
 void * get_happys(void *);
 int get_num_primes(unsigned char *, long);
 int get_next_num(unsigned char *, int, int *, int, unsigned int);
 void get_primes_unthreaded();
 void get_primes_threaded(int);
+void happy_parallel(unsigned char *, int, unsigned int, int);
 int is_happy(int);
 void * mark_between(void *);
 void mark_to_index(unsigned char *, int, int, unsigned int);
-bool marked(unsigned char *, unsigned int);
 void mark(unsigned char *, unsigned int);
+bool marked(unsigned char *, unsigned int);
 int sum_square_digits(int);
 void usage();
 
@@ -56,8 +56,6 @@ struct happy_info {
     int index;
     int cur_num;
 };
-
-pthread_mutex_t mutex;
 
 int main(int argc, char *argv[])
 {
@@ -134,31 +132,8 @@ void get_primes_threaded(int num_threads) {
     //printf("Found %d primes", get_num_primes(bitmap, upper_bound));
 
     happy_parallel(bitmap, 2, upper_bound, num_threads);
-    /*
-    int happy_numbers = 0;
-    for (int i=2; i<=UINT_MAX/10000; i++) {
-        if (!marked(bitmap, i)) {
-            int num = i;
-            bool end = false;
-            bool happy = false;
-            while (!end) {
-                num  = sum_square_digits(num);
-                if (num == 1) {
-                    happy = true;
-                    happy_numbers++;
-                    break;
-                }
-                for (int i=0; i<8; i++) {
-                    if (num == unhappy_numbers[i]) {
-                        end = true;
-                        break;
-                    }
-                }
-            }
 
-            printf("%d: %s\n", i, happy == true ? "Happy! :)" : "Sad :(");
-        }
-    }
+    /*
     printf("Number of happy prime numbers: %d\n", happy_numbers);
     */
     printf("End.\n");
@@ -175,7 +150,6 @@ int get_num_primes(unsigned char * bitmap, long max) {
 }
 
 void happy_parallel(unsigned char * bitmap, int start, unsigned int upper_bound, int num_threads) {
-    printf("Into happy_parallell.\n");
     pthread_t tids[num_threads];
     struct happy_info hi[num_threads];
     int * current_nums = (int *) malloc (num_threads * sizeof(int *));
@@ -200,7 +174,8 @@ void * get_happys(void * ptr) {
     struct happy_info * hi = (struct happy_info *) ptr;
     while (hi->cur_num > 0) {
         if (is_happy(hi->cur_num)) {
-            printf("%d: Happy! :)", hi->cur_num);
+            // This makes the program take forever. Like.... damn.
+            //printf("%d: Happy! :)\n", hi->cur_num);
         }
         hi->cur_num = get_next_num(hi->bitmap, hi->cur_num, hi->current_nums, hi->num_threads, UINT_MAX-1);
         hi->current_nums[hi->index] = hi->cur_num;
@@ -251,9 +226,8 @@ void count_parallel(unsigned char * bitmap, int base, unsigned int upper_bound, 
 
 int get_next_num(unsigned char * bitmap, int current_num, int * current_nums, int num_threads, unsigned int upper_bound) {
     int max = current_num;
-    //printf("%d", (unsigned int) sqrt(upper_bound));
-    if (max <= (int)sqrt(upper_bound)) {
-        for (int i=max+1; i < (unsigned int)sqrt(upper_bound); i++) {
+    if (max <= upper_bound) {
+        for (int i=max+1; i < upper_bound; i++) {
             if (!marked(bitmap, i)) {
                 int valid_num = 1;
                 for (int j=0; j < num_threads; j++) {
@@ -278,7 +252,7 @@ void * mark_between(void * ptr) {
         b->lower_bound = b->base*2;
         printf("Marking multiples of index '%d' with thread '%d'!\n", b->base, b->index);
         mark_to_index(b->bitmap, b->base, b->lower_bound, b->upper_bound);
-        b->base = get_next_num(b->bitmap, b->base, b->current_nums, b->num_threads, UINT_MAX-1);
+        b->base = get_next_num(b->bitmap, b->base, b->current_nums, b->num_threads, (unsigned int) sqrt(UINT_MAX-1));
         b->current_nums[b->index] = b->base;
     }
     pthread_exit(NULL);

@@ -23,8 +23,10 @@
 #define BLOCKSIZE 1
 #define BITS_PER_BYTE 8
 
+unsigned int adjust_lower_bound(int, unsigned int);
 void count_parallel(unsigned char *, int, unsigned int, int);
-int get_next_num(unsigned char *, int *, int, unsigned int);
+int get_num_primes(unsigned char *, int);
+int get_next_num(unsigned char *, int, int, unsigned int);
 void get_primes_unthreaded();
 void get_primes_threaded(int);
 void * mark_between(void *);
@@ -37,7 +39,7 @@ void usage();
 struct bounds {
     unsigned char * bitmap;
     int base;
-    int * current_nums;
+    int current_num;
     int num_threads;
     int index;
     unsigned int lower_bound;
@@ -113,7 +115,7 @@ void get_primes_threaded(int num_threads) {
     unsigned char * bitmap = (unsigned char *) malloc((UINT_MAX/BITS_PER_BYTE) + 1);
     printf("Addr of bitmap: %p\n", bitmap);
     printf("Size of bitmap: %ld\n", sizeof(bitmap));
-    unsigned int upper_bound = UINT_MAX-2;
+    unsigned int upper_bound = UINT_MAX/2-2;
     //unsigned int upper_bound = 500000;
     //for (int i=2; i<=sqrt(255); i++) {
     //    if (marked(bitmap, i) == 0) {
@@ -121,6 +123,7 @@ void get_primes_threaded(int num_threads) {
     //    }
     //}
     printf("Done generating prime list...");
+    printf("Found %d primes", get_num_primes(bitmap, upper_bound));
     /*
     int happy_numbers = 0;
     int unhappy_numbers[] = {4, 16, 37, 58, 89, 145, 42, 20};
@@ -151,54 +154,44 @@ void get_primes_threaded(int num_threads) {
     */
 }
 
+int get_num_primes(unsigned char * bitmap, int max) {
+    int num_primes = 0;
+    for (int i=2; i<max; i++) {
+        if (!marked(bitmap, i)) {
+            num_primes++;
+        }
+    }
+    return num_primes;
+}
+
 void count_parallel(unsigned char * bitmap, int base, unsigned int upper_bound, int num_threads) {
     printf("Into count_parallell. b upper: %u %d\n", upper_bound, base);
     pthread_t tids[num_threads];
     struct bounds b[num_threads];
-    int * current_nums = (int *) malloc(num_threads*sizeof(int));
-    current_nums[0] = 1;
-    int num = get_next_num(bitmap, current_nums, num_threads, upper_bound);
+    int current_num = 2;
     for (int i=0; i< num_threads; i++) {
         b[i].bitmap = bitmap;
-        b[i].base = num;
-        current_nums[i] = num;
-        b[i].current_nums = current_nums;
+        b[i].base = current_num;
+        b[i].current_num = current_num;
         b[i].num_threads = num_threads;
         b[i].index = i;
         // Allows the bounds to be set correctly.
-        b[i].lower_bound = num*2;
-        b[i].upper_bound = upper_bound;
+        int iter = (upper_bound/num_threads);
+        b[i].lower_bound = iter * i + (current_num);
+        b[i].upper_bound = iter * (i+1);
         pthread_create(&tids[i], NULL, mark_between, &b[i]);
-        num = get_next_num(b->bitmap, b->current_nums, b->num_threads, b->upper_bound);
     }
     for (int i=0; i<num_threads; i++) {
         pthread_join(tids[i], NULL);
     }
 }
 
-int get_next_num(unsigned char * bitmap, int * current_nums, int num_threads, unsigned int upper_bound) {
-    int max = 0;
-    for (int i=0; i<num_threads; i++) {
-        if (current_nums[i] > max) {
-            max = current_nums[i];
-        }
-    }
-    if (max == 0) {
-        return 2;
-    }
+int get_next_num(unsigned char * bitmap, int current_num, int num_threads, unsigned int upper_bound) {
+    int max = current_num;
     if (max <= (int)sqrt(upper_bound)) {
         for (int i=max+1; i < (int)sqrt(upper_bound); i++) {
             if (!marked(bitmap, i)) {
-                int flag = 0;
-                for (int j=0; j<num_threads; j++) {
-                    if (current_nums[j] != 0 && i % current_nums[j] == 0 &&
-                        current_nums[j] != 1){
-                        flag = 1;
-                    }
-                }
-                if (flag == 0) {
-                    return i;
-                }
+                return i;
             }
         }
     }
@@ -207,18 +200,24 @@ int get_next_num(unsigned char * bitmap, int * current_nums, int num_threads, un
 
 void * mark_between(void * ptr) {
     struct bounds * b = (struct bounds *) ptr;
-    int num = b->base;
-    printf("Current prime: %d\n", num);
-    mark_to_index(b->bitmap, b->base, b->lower_bound, b->upper_bound);
-    while (num > 0) {
-        num = get_next_num(b->bitmap, b->current_nums, b->num_threads, b->upper_bound);
-        printf("Current prime: %d\n", num);
-        b->base = num;
-        b->current_nums[b->index] = num;
-        unsigned int iter = (upper_bound - lower_bound) % b->num_threads;
-        mark_to_index(b->bitmap, b->base, b->lower_bound, b->upper_bound);
+    while (b->current_num > 0) {
+        printf("Current prime: %d index %d\n", b->current_num, b->index);
+        b->base = b->current_num;
+        int iter = (b->upper_bound/b->num_threads);
+        b->lower_bound = iter * b->index + (b->base);
+        unsigned int cur_lower_bound = adjust_lower_bound(b->base, b->lower_bound);
+        mark_to_index(b->bitmap, b->base, cur_lower_bound, b->upper_bound);
+        b->current_num = get_next_num(b->bitmap, b->current_num, b->num_threads, UINT_MAX-2);
     }
+    pthread_exit(NULL);
     return (void *) NULL;
+}
+
+unsigned int adjust_lower_bound(int base, unsigned int lower_bound){
+    while(lower_bound % base != 0) {
+        lower_bound++;
+    }
+    return lower_bound;
 }
 
 int sum_square_digits(int num) {

@@ -19,6 +19,6 @@ ps: dvi
 pdf: ps
 	ps2pdf writeup.ps
 
-c: myar.c
-	icc sevehappy.c -std=c99 -o sevehappy
+c: sevehappy.c
+	icc sevehappy.c -std=c99 -pthread -o sevehappy
 

@@ -1,3 +1,4 @@
+#define  _XOPEN_SOURCE
 #include <ar.h> // /usr/include/ar.h for reference
 #include <ctype.h>
 #include <errno.h>
@@ -95,7 +96,7 @@ void get_primes_processes(int num_threads) {
     unsigned char * bitmap = (unsigned char *) malloc((UINT_MAX/BITS_PER_BYTE) + 1);
     unsigned int upper_bound = UINT_MAX-1;
 
-    printf("Generating Prime List for '%d' threads, up to '%ld'.\n", num_threads, UINT_MAX-1);
+    printf("Generating Prime List for '%d' threads, up to '%d'.\n", num_threads, UINT_MAX-1);
     count_parallel_processes(bitmap, 2, upper_bound, num_threads);
 
     //printf("Found %d primes", get_num_primes(bitmap, upper_bound));
@@ -145,7 +146,7 @@ void get_primes_threaded(int num_threads) {
     unsigned char * bitmap = (unsigned char *) malloc((UINT_MAX/BITS_PER_BYTE) + 1);
     unsigned int upper_bound = UINT_MAX-1;
 
-    printf("Generating Prime List for '%d' threads, up to '%ld'.\n", num_threads, UINT_MAX-1);
+    printf("Generating Prime List for '%d' threads, up to '%d'.\n", num_threads, UINT_MAX-1);
     count_parallel(bitmap, 2, upper_bound, num_threads);
 
     //printf("Found %d primes", get_num_primes(bitmap, upper_bound));
@@ -256,12 +257,12 @@ void count_parallel_processes(unsigned char * bitmap, int base, unsigned int upp
         int len = (UINT_MAX/8) - 1;
         shmid = shmget(key, len, IPC_CREAT | 0666);
         for (i=0; i<num_threads; i++) {
-           caddr_t res = mmap(0, len, PROT_READ|PROT_WRITE, MAP_SHARED, pids[i], 0); 
+           mmap(0, len, PROT_READ|PROT_WRITE, MAP_SHARED, pids[i], 0);
         }
         return;
     }
     else {
-        
+
     }
 }
 

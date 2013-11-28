@@ -21,4 +21,3 @@ pdf: ps
 
 c: sevehappy.c
 	icc sevehappy.c -std=c99 -pthread -o sevehappy
-

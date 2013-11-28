@@ -6,8 +6,11 @@
 #include <stdio.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/mman.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
 #include <limits.h>
 #include <pthread.h>
 #include <stdlib.h>
@@ -25,6 +28,7 @@
 
 unsigned int adjust_lower_bound(int, unsigned int);
 void count_parallel(unsigned char *, int, unsigned int, int);
+void count_parallel_processes(unsigned char *, int, unsigned int, int);
 void * get_happys(void *);
 int get_num_primes(unsigned char *, long);
 int get_next_num(unsigned char *, int, int *, int, unsigned int);
@@ -92,7 +96,7 @@ void get_primes_processes(int num_threads) {
     unsigned int upper_bound = UINT_MAX-1;
 
     printf("Generating Prime List for '%d' threads, up to '%ld'.\n", num_threads, UINT_MAX-1);
-    count_parallel(bitmap, 2, upper_bound, num_threads);
+    count_parallel_processes(bitmap, 2, upper_bound, num_threads);
 
     //printf("Found %d primes", get_num_primes(bitmap, upper_bound));
 
@@ -215,6 +219,50 @@ int is_happy(int start) {
         }
     }
     return 0;
+}
+
+/* Parent function to starting and running all threads for marking primes*/
+void count_parallel_processes(unsigned char * bitmap, int base, unsigned int upper_bound, int num_threads) {
+    int * pids = (int *) malloc (num_threads * sizeof(int *));
+    int * current_nums = (int *) malloc (num_threads * sizeof(int *));
+    int shmid;
+    key_t key;
+    char *shm;
+    int current_num = 2;
+    int i=0;
+    int pid = 0;
+    i++;
+    while((pid = fork()) && i < num_threads) {
+        /*
+        b[i].bitmap = bitmap;
+        b[i].base = current_num;
+        current_nums[i] = current_num;
+        b[i].current_nums = current_nums;
+        b[i].num_threads = num_threads;
+        b[i].index = i;
+        // Allows the bounds to be set correctly.
+        b[i].lower_bound = b[i].base*2;
+        b[i].upper_bound = upper_bound;
+        pthread_create(&tids[i], NULL, mark_between, &b[i]);
+        current_num = get_next_num(bitmap, current_num, current_nums, num_threads, UINT_MAX-1);
+        */
+        pids[i]=pid;
+        i++;
+        kill(getpid(), SIGSTOP); // pauses process
+    }
+    if (pid != 0) {
+        sleep(1); // Make sure all processes are spawned.
+        key = 5545;
+        int len = (UINT_MAX/8) - 1;
+        shmid = shmget(key, len, IPC_CREAT | 0666);
+        for (i=0; i<num_threads; i++) {
+           caddr_t res = mmap(0, len, PROT_READ|PROT_WRITE, MAP_SHARED, pids[i], 0); 
+        }
+        return;
+    }
+    else {
+        
+    }
 }
 
 /* Parent function to starting and running all threads for marking primes*/

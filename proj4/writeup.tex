@@ -49,22 +49,167 @@ each thread/process be in charge of marking up to those points. For the happy nu
 calculate multiple at a time and begin printing them out.
 \subsubsection{Part 2}
 \subsection{Deviations}
+When using the bitmap on the threads portion of the code, instead of assigning it a shared
+memory segment, I share the pointer it is associated with to all threads. For each prime, 
+I calculate if it is a happy number in each thread, then print out the number if it is indeed
+happy. After that, the thread gets the next prime in the list and begins working with it.
 \clearpage
 
 \section{Work Log}
-Git log
+commit 444cb2906f867f70453fe0363171b81266c4ed94
+Author: Dean Johnson <deanjohnson222@gmail.com>
+Date:   Wed Nov 27 21:19:17 2013 -0800
+
+    Updated timing graph for multiple values.
+
+commit 477012ddf03b2695079531a6f28435d28684a6ae
+Author: Dean Johnson <deanjohnson222@gmail.com>
+Date:   Wed Nov 27 20:43:24 2013 -0800
+
+    Added a second timings file (int_max) with threads.
+
+commit 0a783d860b7c22cca1efcfa2a449fec280b2e277
+Author: Dean Johnson <deanjohnson222@gmail.com>
+Date:   Wed Nov 27 20:02:28 2013 -0800
+
+    Updated for processes.
+
+commit 3590b40b59013d0340f91bbc3b3b59e7afb8bf5d
+Merge: bce8a04 2a3545b
+Author: Dean Johnson <deanjohnson222@gmail.com>
+Date:   Wed Nov 27 18:59:47 2013 -0800
+
+    Merge branch 'master' of github.com:johnsdea/cs311
+
+    Conflicts:
+        proj4/timings.txt
+
+commit bce8a04d723a8813d2903defdacc188e7431d274
+Author: Dean Johnson <deanjohnson222@gmail.com>
+Date:   Wed Nov 27 18:49:54 2013 -0800
+
+    Added list of timings.
+
+commit 3a8c25aa13c1bc29c8eaf4b826c87b8222b50470
+Author: Dean Johnson <deanjohnson222@gmail.com>
+Date:   Wed Nov 27 18:49:17 2013 -0800
+
+    Added a graph for timings of thread counts.
+
+commit 2a3545b1777dad32f7e35c021a4f40987173d80c
+Author: Dean Johnson <deanjohnson222@gmail.com>
+Date:   Wed Nov 27 18:32:28 2013 -0800
+
+    Added timings for thread execution.
+
+commit 774e5a839747073d77c033f75fc773881f84464f
+Author: Dean Johnson <deanjohnson222@gmail.com>
+Date:   Wed Nov 27 13:07:24 2013 -0800
+
+    Updated for processes (not working yet)
+
+commit baed985c9db53fe870c341a9594577afd9041949
+Author: Dean Johnson <deanjohnson222@gmail.com>
+Date:   Wed Nov 27 04:31:07 2013 -0800
+
+    Threads work with prime generation and happy nums.
+
+commit fb5752d701837e3589eb17572071fe0eb7c320fb
+Author: Dean Johnson <deanjohnson222@gmail.com>
+Date:   Wed Nov 27 04:17:00 2013 -0800
+
+    Working threads, implemented threaded happy numbers.
+
+commit 9d336197602970a38cfee5cc93a9958580fb9a7c
+Author: Dean Johnson <deanjohnson222@gmail.com>
+Date:   Tue Nov 26 23:49:41 2013 -0800
+
+    Updated marking nums. WORKS FOR INT_MAX. -- Backup
+
+commit b48f51e46baf83cb2195cf420a76f0b6f4e1406c
+Author: Dean Johnson <deanjohnson222@gmail.com>
+Date:   Tue Nov 26 23:00:03 2013 -0800
+
+    Broke everything.
+
+commit d43565ec7a1bf334ecf6a55b3a3823b7f7c94805
+Author: Dean Johnson <deanjohnson222@gmail.com>
+Date:   Tue Nov 26 04:52:50 2013 -0800
+
+    Commit before refactor
+
+commit dfb893033144835cc6083ad569ebcb32eb805a62
+Author: Dean Johnson <deanjohnson222@gmail.com>
+Date:   Tue Nov 26 00:20:42 2013 -0800
+
+    Backup of previous implementation
+
+commit e7b3395728e744ae7e855b375b075e9576c1a980
+Author: Dean Johnson <deanjohnson222@gmail.com>
+Date:   Mon Nov 25 23:20:55 2013 -0800
+
+    Got threads working. About to test on OS-Class
+
+commit 694287e21c7b735bfdcf835286c93f6cb106179d
+Author: Dean Johnson <deanjohnson222@gmail.com>
+Date:   Mon Nov 25 22:20:41 2013 -0800
+
+    Added more thread stuff in, it's freezing though.
+
+commit 61655e18f8c6e9293c16ad240fbd7794aec33488
+Author: Dean Johnson <deanjohnson222@gmail.com>
+Date:   Mon Nov 25 01:35:35 2013 -0800
+
+    Wrote some code for paralellizing.
+
+commit 533dde5706d6c2f2d2bb3426166c5f35f8448907
+Author: Dean Johnson <deanjohnson222@gmail.com>
+Date:   Mon Nov 25 00:30:29 2013 -0800
+
+    Implemented the program w/o processes and threads.
+
+commit dbc4e2a2ae0173df01f6967d66016938c20c8386
+Author: Dean Johnson <deanjohnson222@gmail.com>
+Date:   Sun Nov 24 19:18:42 2013 -0800
+
+    Updated writeup
+
 \clearpage
 
 \section{Challenges}
 \begin{itemize}
+\item Spawning threads originally gave me a lot of trouble I tried passing an array of 
+objects pointer to that array, and it was causing seg-faults. I fixed this by just sending 
+the address of each thread I created to pcreate t.
+\item Which method to use to count primes via threads. The biggest challenge I ran in to was
+implementing the threads in a way that they didn't interact with the same bit at the same time.
+My first attempt was giving each thread a number to work on, then getting the next number
+(without keeping track of other threads numbers), but that ended up giving me skewed results.
+The second attempt I made tried letting each thread handle a certain range in the bitmap, I'm
+not quite sure what went wrong with this one, but it didn't work. Lastly, I went back to the
+first attempt but kept track of other thread's numbers. This allowed me to only grab primes
+that were not being iterated over currently.
+\item Another big issue I had was iterating using an unsigned int, instead of a long. Even
+though I was making sure the unsigned int held a number no larger than UINT MAX-1, I was 
+still running into issues with it calculating correctly when adding values.
 \end{itemize}
 \clearpage
 
 \section{Questions}
 \begin{enumerate}
-\item What do you think the main point of this assignment is? \\ 
-\item How did you ensure your assignment was correct? Testing details, for instance. \\ 
-\item What did you learn? \\ 
+\item What do you think the main point of this assignment is? \\ I think the main part of this
+assignment was to teach us threads, but to also help us contrast threads and processes. Threads
+seem to have a much easier time sharing memory, and are easier to understand conceptually for me.
+\item How did you ensure your assignment was correct? Testing details, for instance. \\ I 
+tested with 255 for the max number initially, so when I was printing out, I could see exactly
+which threads were doing certain things. Secondly, I made a function that counted the number of
+unmarked primes, then compared that to Wolfram Alpha's results for the number of primes below a
+given number. To make sure it was utilizing all threads, I used a lot of print statements to
+print which threads were marking each number as well.
+\item What did you learn? \\ I learned a lot about threads and how to manage data with them.
+I found it much more conceptually understanding than processes and easier to implement threads
+too. It was so easy to understand, once I had primes implemented, it took me only 20
+minutes to get threads working on calculating happy primes.
 \end{enumerate}
 
 \end{document}

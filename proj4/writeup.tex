@@ -39,7 +39,6 @@
 \section{Design}
 \hrule
 \subsection{Initial Implementation}
-\subsubsection{Part 1}
 First, I'm going to write out the assignment without threads and processes. This
 will ensure I have the basics of the program working, so I'm not having to debug which
 portions of the assignment are working and not working. Next, I'll implement the threads and
@@ -47,7 +46,6 @@ processes. I will use the shared memory to share the bitmap, and when using the 
 assignment 1, I will split the marking of each number's multiple to x sections, and have 
 each thread/process be in charge of marking up to those points. For the happy numbers, I'll
 calculate multiple at a time and begin printing them out.
-\subsubsection{Part 2}
 \subsection{Deviations}
 When using the bitmap on the threads portion of the code, instead of assigning it a shared
 memory segment, I share the pointer it is associated with to all threads. For each prime, 

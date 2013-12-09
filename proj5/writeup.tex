@@ -39,24 +39,68 @@
 \section{Design}
 \hrule
 \subsection{Initial Implementation}
-\begin{enumerate}
-\end{enumerate}
+For the inital implementation I will make the client in C and have it compute the
+perfect numbers, then send them via xml over the socket to manage. In manage, it will
+handle all of the requests coming in and do the appropriate action per one. It will also
+parse xml primarily using the re module with regex expressions. Report will just query the
+server for the appropriate perfect numbers.
 \subsection{Deviations}
+I didn't have many deviations from the inital implementation. My main deviations were
+how the data was being sent over xml. Originally I was storing all the data in FILE data types,
+but I decided that wans't really appropriate for the simple tasks we were doing and because we
+only needed to send data over the socket, which could be done using strings. (char arrays).
+I also forgot about the kill command via report, so I added in partial functionality for that.
 \clearpage
 
 \section{Work Log}
+commit 8ed69b7458aa19d4fce5c3c6f4edda669d5dde17
+Author: Dean Johnson <deanjohnson222@gmail.com>
+Date:   Sun Dec 8 22:37:30 2013 -0800
+
+    Fixed wrong output of perfect numbers
+
+commit 4b29b67dbff50c63ee6a3459c2a3f73f7c404337
+Author: Dean Johnson <deanjohnson222@gmail.com>
+Date:   Sun Dec 8 22:14:03 2013 -0800
+
+    Added in kill functionality for report
+
+commit e8f69dbc89712ae18fb4c8a53c3d2096be6c0538
+Author: Dean Johnson <deanjohnson222@gmail.com>
+Date:   Sun Dec 8 22:07:03 2013 -0800
+
+    Added in report manage and computer functionalities
+
+commit 5957d2d284c8f14fe16c4e8899e193866f172e78
+Author: Dean Johnson <deanjohnson222@gmail.com>
+Date:   Sun Dec 8 14:30:25 2013 -0800
+
+    init commit
 \clearpage
 
 \section{Challenges}
 \begin{itemize}
+\item Skipping the xml header in compute
+\item Maintaining multiple connections in manage
+\item Regex matching tags
+\item Report reporting all numbers correctly.
 \end{itemize}
 \clearpage
 
 \section{Questions}
 \begin{enumerate}
-\item What do you think the main point of this assignment is?: \\
+\item What do you think the main point of this assignment is?: \\ To learn how to use sockets and
+communicate over a network. There were challenges with other portions of the assignment, but I think the main
+portion of the assignment was meant to teach us how to use sockets, and communicate using them.
 \item How did you ensure your assignment was correct? Testing details, for instance. \\
-\item What did you learn?  \\
+Running multiple instances of compute while manage was running, using
+different values for the ranges, giving properly and improperly formatted xml, using report with no 
+perfect numbers being stored in manage, using report with all perfect numbers being stored in manage,
+and using different addresses with the client-server setup.
+\item What did you learn?  \\I primarily learned how sockets worked,
+both over a network and on the same network. My biggest challenge was maintaining multiple
+connections and handling multiple requests from the same program, but I got it working
+so that was a good learning experience as well.
 \end{enumerate}
 
 \end{document}

@@ -60,7 +60,7 @@ def main():
                 if data:
                     print "recieved req"
                     print data
-                    resp = manage(data) 
+                    resp = manage(data)
                     # No more need to calc after a None resp
                     print "resp=" + str(resp)
                     if resp:
@@ -85,7 +85,7 @@ def manage(data):
             req = matches[0]
             if req == "range":
                 print perfect_nums
-                return get_number_range() 
+                return get_number_range()
             if req == "perfect numbers":
                 return get_perfect_numbers()
     elif data.find("<perfect>") > 0:
@@ -95,12 +95,19 @@ def manage(data):
             for x in data.split("\n")[1:]:
                 try:
                 # no idea why im getting errorsa nonetype on re.match
+                    print "x= " + str(x)
                     match = re.match(_re_tag_contents, x).groups()[0]
+                    perfect_nums.append(int(match))
+                    print perfect_nums
+                    print "perfect nums appending " + str(match)
                 except:
                     print "perfect nums appending " + str(match)
-                    perfect_nums.append(int(match))
+                    if int(match) not in perfect_nums:
+                        perfect_nums.append(int(match))
+                    continue
+    print perfect_nums
     return None
-            
+
 
 def is_xml(data):
     xml_head = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
@@ -126,6 +133,7 @@ def get_perfect_numbers():
     xml_head = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
     xml = ''.join(["<perfect>" + str(n) + "</perfect>\n" for n
             in perfect_nums])
+    print xml
     return xml_head + xml
 
 if __name__ == "__main__":

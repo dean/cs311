@@ -3,6 +3,7 @@ import sys
 import re
 
 def main():
+    kill = False
     if ''.join(sys.argv).find('k') > 0:
         kill = True
 
@@ -22,14 +23,18 @@ def main():
     xml = s.recv(size)
 
     perfect_nums = []
+    match = ""
     if len(xml.split("\n")) > 1:
         _re_tag_contents = "<.*>(.*)</.*>"
         for x in xml.split("\n")[1:]:
             try:
             # no idea why im getting errorsa nonetype on re.match
                 match = re.match(_re_tag_contents, x).groups()[0]
+                if match:
+                    perfect_nums.append(match)
             except:
-                perfect_nums.append(match)
+                if match and match not in perfect_nums:
+                    perfect_nums.append(match)
 
     print "Perfect Numbers: "
     for pn in perfect_nums:

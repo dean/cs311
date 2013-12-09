@@ -47,42 +47,46 @@ int main(int argc, char *argv[])
 
     printf("connecting...");
     printf("%d", connect(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr)));
-    char * xml_content = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<req>numbers</req>\n";
-    write(sockfd, xml_content, MAXLINE);
-    while(read(sockfd, data, MAXLINE) > 0){
-        
-        //bzero(recvline, MAXLINE);
+    char * xml_content = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<req>range</req>\n";
+    write(sockfd, xml_content, strlen(xml_content));
+    read(sockfd, data, 250);
+    //bzero(recvline, MAXLINE);
 
-        //write(sockfd, sendline, strlen(sendline));
-        /*
-        if(read(sockfd, recvline, MAXLINE) == 0){
-            perror("Something broke");
-            exit(-1);
-        }
-        */
-        //fputs(sendline, stdout);
-        printf("Got input, sending to get_primes.\n");
-        printf("data = %s\n", data);
- //       data = "<start>9</start>\n<end>12</end>\n";
-        get_primes(primes_f, data);
+    //write(sockfd, sendline, strlen(sendline));
+    /*
+    if(read(sockfd, recvline, MAXLINE) == 0){
+        perror("Something broke");
+        exit(-1);
     }
+    */
+    //fputs(sendline, stdout);
+    printf("Got input, sending to get_primes.\n");
+    printf("data = %s\n", data);
+    //       data = "<start>9</start>\n<end>12</end>\n";
+    get_primes(primes_f, data);
+
+
+    //printf("%d", connect(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr)));
+    //printf("err=%s\n", strerror(errno));
     printf("\n\nprimes_f=%s", primes_f);
-    write(sockfd, primes_f, MAXLINE);
-    
+    write(sockfd, primes_f, strlen(primes_f));
+    shutdown(sockfd, 1);    
+    exit(0); 
 }
 
 void get_primes(char * primes_f, char * data) {
     char * line = (char *) malloc(500);
     char * buf;
     char * num = (char *) malloc(15);
+    bzero(num, 15);
     char * n;
+    char * xml_content = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<req>range</req>\n";
     int base = 0;
     int ind = 0;
     int num_ind = 0;
     int start = -1;
     int end = -1;
-
-    printf("data[0]=%c", data[0]);
+    base = 0; // Skip the first line
 
     while (data[base] != '\0') {
         if (data[base+ind] != '\n') {
@@ -90,13 +94,16 @@ void get_primes(char * primes_f, char * data) {
         }
         else {
             printf("Entered this loop!\n");
+            printf("base=%d\n", base);
+            printf("ind=%d\n", ind);
+            printf("data[base+ind]=%c\n", data[base]);
             int start_tag=0;
             for(int i=0; i<ind; i++) {
                 if (data[base+i] == '>') {
                     start_tag = 1;
                 }
                 else if (start_tag) {
-                    if (data[base+i] != '<') {
+                    if (data[base+i] != '<' && data[base+i] != '\n' ) {
                         num[num_ind] = data[base+i];
                         num_ind++;
                     }
@@ -105,10 +112,13 @@ void get_primes(char * primes_f, char * data) {
                     }
                 }
             }
-            if (start == -1) {
+            if (start == -1 && num_ind > 0) {
+                printf("start=%d\n", start);
+                printf("num=%s", num);
                 start = atoi(num);
+                printf("start=%d\n", start);
             }
-            else {
+            else if (num_ind > 0) {
                 end = atoi(num);
             }
             base+=ind+1;
@@ -119,6 +129,8 @@ void get_primes(char * primes_f, char * data) {
 
         }
     }
+    printf("start=%d\n", start);
+    printf("end=%d\n", end);
     if (start > end) {
         int tmp = end;
         end = start;
@@ -131,21 +143,19 @@ void get_primes(char * primes_f, char * data) {
     ind = 39;
     printf("ind=%d\n", ind);
     for (int i = start; i<=end; i++) {
+        if (is_perfect(i)) {
+            printf("i=%d\n", i);
             tag = "<perfect>";
             append_str(primes_f, tag, 9, ind);
             ind += 9;
-            printf("ind=%d\n", ind);
             bzero(num, 15);
             sprintf(num, "%d", i); 
-            printf("i = %d, num_digits = %d\n", i, num_digits(i));
-            printf("ind=%d\n", ind);
             append_str(primes_f, num, num_digits(i), ind);
             ind += strlen(num);
-            printf("ind=%d\n", ind);
             tag = "</perfect>\n";
             append_str(primes_f, tag, 11, ind);
             ind += 11;
-            printf("ind=%d\n", ind);
+        }
     }
     int i = 0 ;
     //while (i <= 133) {

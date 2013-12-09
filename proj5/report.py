@@ -3,6 +3,9 @@ import sys
 import re
 
 def main():
+    if ''.join(sys.argv).find('k') > 0:
+        kill = True
+
     host = '127.0.0.1'
     port = 5666
     addr = (host, port)
@@ -12,7 +15,10 @@ def main():
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect(addr)
-    s.send(xml_head + "<req>perfect numbers</req>\n")
+    if kill:
+        s.send(xml_head + "<req>perfect numbers</req>\n<kill>True</kill>\n")
+    else:
+        s.send(xml_head + "<req>perfect numbers</req>\n")
     xml = s.recv(size)
 
     perfect_nums = []

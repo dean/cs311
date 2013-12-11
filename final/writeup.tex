@@ -1,0 +1,150 @@
+\documentclass[fleqn,10pt,titlepage]{article}
+
+\usepackage{balance}
+\usepackage[TABBOTCAP, tight]{subfigure}
+\usepackage{enumitem}
+
+\usepackage[top=0.8in, left=1in, bottom=0.8in, right=1in]{geometry}
+
+\usepackage{pstricks, pst-node}
+
+\usepackage{geometry}
+\geometry{textheight=10in, textwidth=7.5in}
+
+\newcommand{\cred}[1]{{\color{red}#1}}
+\newcommand{\cblue}[1]{{\color{blue}#1}}
+
+\usepackage{longtable, hyperref}
+\newcommand{\longtableendfoot}{Please continue at the next page}
+
+\def\name{Dean Johnson}
+
+%% The following metadata will show up in the PDF properties
+\hypersetup{
+  colorlinks = true,
+  urlcolor = black,
+  pdfauthor = {\name},
+  pdfkeywords = {cs311 ``operating systems'' files filesystem I/O},
+  pdftitle = {CS 311 Project 2: UNIX File I/O},
+  pdfsubject = {CS 311 Project 2},
+  pdfpagemode = UseNone
+}
+
+\pagenumbering{gobble}
+\parindent = 0.0 in
+\parskip = 0.2 in
+
+\begin{document}
+
+\section{Posix API vs Windows API}
+\hrule
+\subsection{File I/O}
+\tab Using the Posix API, to open a file, you use $open(filename, flags, more optional flags)$. 
+If the $O_CREAT$ flag is passed, the file will be created if it doesn’t exist. Additionally, 
+the flags specify various flag attributes such as whether it’s read/write only, whether 
+or not to block on open, whether to append on writes, and more.  The optional flags are 
+usually the permissions the file should on the filesystem when it’s opened. \\
+\tab When using the Winodws API to open a file, you use CreateFile, and have to provide many 
+more arguments to designate flags. The arguments for CreateFile, in generic terms, are 
+filename, readable and/or writeable, shareable with other programs, security attributes, 
+flag for whether to create or open an existing file, file attribute flags, and a flag for if 
+it’s a template file.
+$.
+Code Examples:\\
+Posix Api: \\
+open(“file.txt”, OR_RDWR | O_CREAT, S_IRWXU | S_IRWXG | S_IRWXO); \\
+Windows Api: \\
+CreateFile(“file.txt”, GENERIC_READ | GENERIC_WRITE, 0, NULL,  OPEN_EXISTING, 
+FILE_ATTRIBUTE_NORMAL, NULL); \\
+$
+Explanation:
+Both sets of code do the same thing, except the windows api does not allow for creating a 
+file if it exists, or otherwise just opening it. That is what the $O_CREAT$ flag does in 
+the Posix API's open function. Additionally, with the Posix API, most of the low level 
+specifications for the file are not required, but are still easily implemented as flags. 
+With the Windows API, many more of the implementation details are explicitly required and 
+only assumed to be default of NULL or 0 are sent as parameters.
+
+\clearpage
+\subsection{Threads}
+\hrule
+\tab To create a thread using the Posix API we have to use $pthread_create(pthread, pthread attr, 
+function, single_arg)$. The thread data is populated when you provide an address for the 
+pthread to be stored to, attr is the default thread attributes if NULL is provided, the 
+function is a function of $void *$ return type, which only has a single argument: 
+$single_arg$. If more than one field need to be sent in though, a $struct$ can be used as 
+the $single_arg$, giving it a way to hold multiple values when being passed around. \\
+\tab To create a thread using the Windows API, we use the $CreateThread(attrs, stack_size, 
+function, single_arg, creation_flags, thread_addr)$. CreateThread doesn't have many more 
+explicit parameters than $pthread_create$, and both functions give a function and argument 
+for the thread to use as parameters. \\  
+$
+Code Examples:
+Posix Api: \\ 
+Pthread_create(&thread_id, NULL, function_pointer, function_arg); \\
+Windows Api: \\
+CreateThread(NULL, 0, function_pointer, function_arg, 0, &thread_id); \\
+$
+\tab The differences between the two are CreateThread has explicit parameters for defining 
+the state of the thread immediately after creation, such as running immediately, or being 
+suspended, explicit thread attributes that define whether the thread can be inherited or not, 
+and the initial size of the stack for a given thread. Overall though, both the Posix and 
+Windows APIs operate in very similar manner for spawning threads. Using the Windows API, if 
+the argument $args$ is given a $NULL$ value, and the arguments $stack_size$ and 
+$creation_flags$ are given $0$ values, the defaults are used and the functions from both 
+the Posix and Windows APIs will perform the same.
+\clearpage
+
+Psrocesses
+Posix API:
+To use processes in the Posix API, you should call fork() and assign the result to a variable. If the value is greater than 0, then we know we are in the parent process, and we now have the process id of the process we just spawned. If the value is 0, we know we are in the child process, and now can assign the child to do some task. Lastly, if we get a -1, we know there was some sort of error we should handle.
+Windows API:
+To create and run a process in the Windows API we use the CreateProcess function. It’s parameters are application, command line code to execute, is process inheritable, is thread inheritable, handle inheritable, creation flags, parent environment, parent directory, startup info struct pointer, and process info struct pointer. 
+Compare/Contrast:
+The windows and posix apis differ greatly when it comes to process initialization and handling. Like most other system processes, the Windows API uses a much more explicit definition when declaring processes, but the differences are the windows API doesn’t do much with the process once it’s been created. There is a WaitForSingleObject method that is used for Windows API processes that waits for the process provided via the process_information struct to finish running, whereas the in the Posix API we would use waitpid to wait for the process to finish before doing anything more.
+Code:
+// POSIX
+Int pid = fork();
+If (pid > 0) {
+// Do parent stuff
+}
+Else if (pid == 0) {
+// do child stuff
+}
+// WINDOWS
+if (! CreateProcess(NULL, “”, NULL, NULL, FALSE, 0, NULL, NULL, &startup_info, &process_info) {
+// Do child stuff
+}
+Explanation:
+As you can see, most of the parameters given to CreateProcess are defaulted to NULL, FALSE, or 0. This essentially boils the CreateProcess function down to providing process information in the &process_info struct, and retrieving it from there, whereas in the Posix API you would get the process_id from the return value of fork() and use functions to do things with those processes. CreateProcess also only returns a Boolean, which states whether or not the process currently running is the child.
+
+Conclusion:
+Overall, the Windows API seems to be much more verbose than the Posix API, but both seem to be very functionally the same. They each accomplish their tasks, mostly in similar ways, and the Windows API seems to have more items stored in structs, and give a lot more explicit definitions when using their functions. This would be nice, except as we can see, most of the time we don’t need to explicitly say which security group for example that a thread belongs to. And if it is that important, we have the ability to make those adjustments after the initialization of the thread. Both the Posix and Windows APIs have their places, respectively on Unix and Windows systems and seem to fit the environments that come with them both there; Unix being more about simple use, and giving the ability to make low level modifications if needed, and Windows giving a ton of visible customizability up front, even if a bit overbearing.
+Sources:
+CreateFile: http://msdn.microsoft.com/en-us/library/windows/desktop/aa363858(v=vs.85).aspx
+CreateThread: http://msdn.microsoft.com/en-us/library/windows/desktop/ms682453(v=vs.85).aspx
+CreateProcess Implementation: http://msdn.microsoft.com/en-us/library/windows/desktop/ms682512(v=vs.85).aspx
+CreateProcess: http://msdn.microsoft.com/en-us/library/windows/desktop/ms682425(v=vs.85).aspx
+
+\subsection{Initial Implementation}
+\begin{enumerate}
+\end{enumerate}
+\subsection{Deviations}
+\clearpage
+
+\section{Work Log}
+\clearpage
+
+\section{Challenges}
+\begin{itemize}
+\end{itemize}
+\clearpage
+
+\section{Questions}
+\begin{enumerate}
+\item What do you think the main point of this assignment is?: \\
+\item How did you ensure your assignment was correct? Testing details, for instance. \\
+\item What did you learn?  \\
+\end{enumerate}
+
+\end{document}
